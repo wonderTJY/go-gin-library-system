@@ -1,0 +1,90 @@
+【Gin/GORM 常见错误场景与 HTTP 状态码速查】
+
+一、请求本身有问题（客户端错误）
+1. JSON 格式错误 / 解析失败
+   - 典型 err：
+     - ShouldBindJSON 返回 error（语法错误、类型不匹配）
+   - 建议 HTTP：
+     - 400 Bad Request
+
+2. 参数缺失或格式不合法
+   - 典型 err：
+     - strconv.Atoi 等转换失败
+     - 自己做的业务校验失败（必填字段为空等）
+   - 建议 HTTP：
+     - 400 Bad Request
+
+二、资源不存在
+1. 按 ID 查询单条记录查不到
+   - 典型 err：
+     - errors.Is(err, gorm.ErrRecordNotFound)
+   - 建议 HTTP：
+     - 404 Not Found
+   - 说明：
+     - 对“查详情”接口常用（GET /resources/:id）
+     - 列表查询为空结果通常仍返回 200 + 空数组
+
+三、权限和认证相关
+1. 未登录 / Token 无效
+   - 典型 err：
+     - 自己的认证逻辑返回的错误
+   - 建议 HTTP：
+     - 401 Unauthorized
+
+2. 已登录但没有权限访问资源
+   - 典型 err：
+     - 鉴权中间件返回的错误
+   - 建议 HTTP：
+     - 403 Forbidden
+
+四、资源冲突 / 业务约束失败
+1. 唯一约束冲突（重复创建）
+   - 典型 err：
+     - 数据库返回唯一索引冲突（如 UNIQUE constraint failed）
+   - 建议 HTTP：
+     - 409 Conflict
+
+2. 业务规则冲突（状态不允许操作等）
+   - 典型 err：
+     - 自己定义的业务错误（例如订单已支付却再次支付）
+   - 建议 HTTP：
+     - 409 Conflict
+     - 或根据实际情况选择 422 Unprocessable Entity
+
+五、服务器内部错误
+1. 数据库异常（连接失败、SQL 错误等）
+   - 典型 err：
+     - gorm.Open 返回错误
+     - db 操作返回非 ErrRecordNotFound 的 error
+   - 建议 HTTP：
+     - 500 Internal Server Error
+
+2. 外部服务调用失败
+   - 典型 err：
+     - 调用第三方 HTTP 接口 / RPC 接口返回错误
+   - 建议 HTTP：
+     - 502 Bad Gateway / 503 Service Unavailable / 504 Gateway Timeout
+     - 具体选择视场景而定
+
+六、列表查询结果为空
+1. 查列表没有任何数据
+   - 典型情况：
+     - db.Find(&items) 返回 err == nil，但 len(items) == 0
+   - 建议 HTTP：
+     - 200 OK + 空数组（[]）
+   - 说明：
+     - 列表为空不属于错误，只是“没有符合条件的数据”
+
+七、常用返回模式示例（Gin）
+1. 请求错误
+   - c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+
+2. 未找到资源
+   - c.JSON(http.StatusNotFound, gin.H{"error": "resource not found"})
+
+3. 权限不足
+   - c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+
+4. 服务器内部错误
+   - c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+

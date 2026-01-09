@@ -1,0 +1,24 @@
+# 二进制可执行文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 构建输出目录
+/bin/
+/dist/
+/build/
+
+# IDE 相关
+.vscode/
+.idea/
+
+# Go 模块缓存（有 vendor 再说）
+/vendor/
+
+# 本地数据库
+*.db
+
+#辅助文件
+/notes/
