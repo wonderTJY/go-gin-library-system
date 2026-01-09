@@ -78,6 +78,7 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	}
 	book.Title = input.Title
 	book.Author = input.Author
+	book.Stock = input.Stock
 	if err := h.DB.Save(&book).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update book"})
 		return
