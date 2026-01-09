@@ -5,11 +5,14 @@ import (
 	"gorm.io/gorm"
 
 	"trae-go/handlers"
+	"trae-go/middleware"
 )
 
 func SetupRouter(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
 	bookHandler := handlers.NewBookHandler(db)
+
+	r.Use(middleware.LoggingMiddleware())
 
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
