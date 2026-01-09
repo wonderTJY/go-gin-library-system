@@ -30,9 +30,14 @@ func (h *BookHandler) ListBooks(c *gin.Context) {
 }
 
 func (h *BookHandler) GetBook(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
 	var book models.Book
-	if err := h.DB.First(&book, id).Error; err != nil {
+	if err := h.DB.First(&book, uint(id)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
 			return
@@ -61,9 +66,14 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 }
 
 func (h *BookHandler) UpdateBook(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
 	var book models.Book
-	if err := h.DB.First(&book, id).Error; err != nil {
+	if err := h.DB.First(&book, uint(id)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
 			return
@@ -87,8 +97,13 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 }
 
 func (h *BookHandler) DeleteBook(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.DB.Delete(&models.Book{}, id).Error; err != nil {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.DB.Delete(&models.Book{}, uint(id)).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete book"})
 		return
 	}
