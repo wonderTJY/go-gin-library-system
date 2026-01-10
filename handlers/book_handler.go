@@ -229,9 +229,14 @@ func (h *BookHandler) ReturnABook(c *gin.Context) {
 }
 
 func (h *BookHandler) ListStudentBooks(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
 	var student models.Student
-	if err := h.DB.Preload("Book_Student").First(&student, id).Error; err != nil {
+	if err := h.DB.Preload("Book_Student").First(&student, uint(id)).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "student not found"})
 			return
