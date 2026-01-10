@@ -2,9 +2,9 @@
 
 一个使用 Go + Gin + GORM 实现的简易图书馆管理练习项目，用来练习：
 
-- 基本的 RESTful API 设计（图书增删改查、借书 / 还书）
+- 基本的 RESTful API 设计（图书 / 学生增删改查、借书 / 还书）
 - GORM 模型关系设计（Book、Student、借阅中间表、库存 BookCopy）
-- Gin 中间件（日志中间件、后续可扩展 Auth / 限流等）
+- Gin 中间件（日志、Request ID、中间件链路）
 - Git 基本工作流（本地开发、提交、rebase、推送到 GitHub）
 
 ---
@@ -102,6 +102,39 @@ go run main.go
 - `DELETE /api/v1/books/:id`  
   删除图书。
 
+### 学生相关 API
+
+前缀：`/api/v1/students`
+
+- `GET /api/v1/students`  
+  列出所有学生。
+
+- `GET /api/v1/students/:id`  
+  根据 ID 获取学生详情。
+
+- `POST /api/v1/students`  
+  创建学生，示例请求体：
+
+  ```json
+  {
+    "name": "Tom",
+    "email": "tom@example.com"
+  }
+  ```
+
+- `PUT /api/v1/students/:id`  
+  更新学生信息（目前以“全量更新”方式处理），示例请求体：
+
+  ```json
+  {
+    "name": "Tom Updated",
+    "email": "tom.updated@example.com"
+  }
+  ```
+
+- `DELETE /api/v1/students/:id`  
+  删除学生。
+
 ### 学生借阅相关 API
 
 前缀：`/api/v1/students`
@@ -126,19 +159,26 @@ go run main.go
 
 ---
 
-## 日志中间件
+## 中间件
 
-项目在 `middleware/logging.go` 中实现了一个基础日志中间件，并在路由初始化时全局挂载：
+项目在 `middleware` 目录中实现并全局挂载了几个基础中间件（在 `router/router.go` 中统一配置）：
 
-- 记录内容大致包括：
-  - 请求时间
+- Request ID 中间件（`requestID.go`）：
+  - 为每个请求生成或透传 `X-Request-ID` 请求头
+  - 将 `request_id` 写入 Gin 上下文，供日志等使用
+- 请求计数中间件（`RequestCount.go`）：
+  - 使用 `sync/atomic` 对全局请求总数做并发安全自增
+  - 当前计数通过 `request_count` 存入 Gin 上下文
+- 日志中间件（`logging.go`）：
+  - 记录请求时间
   - HTTP 方法（GET/POST/...）
   - 路径（URL Path）
   - 状态码
   - 耗时（latency）
-- 日志输出到终端，配合 Gin 默认的访问日志，可以清楚看到每个请求的处理情况。
+  - 全局请求计数（`request_count`）
+  - Request ID（从 header 中读取 `X-Request-ID`）
 
-这是后续练习中间件（Request ID、认证、限流、统一错误处理等）的基础。
+日志输出到终端，配合 Gin 默认的访问日志，可以清楚看到每个请求的处理情况。
 
 ---
 
@@ -165,7 +205,7 @@ go run main.go
 
 ## TODO（练习方向）
 
-- [ ] 增加 Request ID 中间件，并在日志中打印 request_id
+- [x] 增加 Request ID 中间件，并在日志中打印 request_id
 - [ ] 增加简单 Token 校验中间件，保护部分路由
 - [ ] 增加统一错误响应中间件，规范错误返回结构
 - [ ] 为核心 handler 编写单元测试 / 集成测试
