@@ -14,6 +14,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	studentHandler := handlers.NewStudentHandler(db)
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.RequestCountMiddleware())
+	r.Use(middleware.AuthenticationMiddleware())
 	r.Use(middleware.LoggingMiddleware())
 
 	api := r.Group("/api")
