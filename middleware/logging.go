@@ -34,8 +34,10 @@ func LoggingMiddleware() gin.HandlerFunc {
 			log.Print("request_count haven't been set")
 		}
 
-		log.Printf("[%s] [rid:%s] method=%s path=%s status=%d latency=%d ip=%s ua=%q rc=%d",
-			startAtstr, c.Writer.Header().Get(RequestIDHeader), method, path, statusCode, latency.Milliseconds(), clientIP, userAgent, rc)
+		userID := c.MustGet("user_id")
+
+		log.Printf("[%s] [rid:%s] method=%s path=%s status=%d latency=%dms ip=%s ua=%q rc=%d userID=%d",
+			startAtstr, c.Writer.Header().Get(RequestIDHeader), method, path, statusCode, latency.Milliseconds(), clientIP, userAgent, rc, userID)
 
 	}
 }
