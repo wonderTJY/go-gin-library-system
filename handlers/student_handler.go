@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"trae-go/models"
 
+	"trae-go/middleware"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"trae-go/middleware"
 )
 
 type StudentHandler struct {
@@ -107,4 +108,7 @@ func (h *StudentHandler) DeleteStudent(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "student deleted"})
+}
+func (h *StudentHandler) PanicTest(c *gin.Context) {
+	panic("kkk")
 }

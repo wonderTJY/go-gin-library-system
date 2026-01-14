@@ -9,14 +9,16 @@ import (
 )
 
 func SetupRouter(db *gorm.DB) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
 	bookHandler := handlers.NewBookHandler(db)
 	studentHandler := handlers.NewStudentHandler(db)
+	r.Use(middleware.RecoveryMiddleware())
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.RequestCountMiddleware())
-	r.Use(middleware.AuthenticationMiddleware(db))
+
 	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.ErrorHandlingMiddleware())
+	r.Use(middleware.AuthenticationMiddleware(db))
 
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
@@ -30,6 +32,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	books.DELETE("/:id", bookHandler.DeleteBook)
 
 	students := v1.Group("/students")
+	students.GET("/panic", studentHandler.PanicTest)
 	students.GET("", studentHandler.ListStudents)
 	students.GET("/:id", studentHandler.GetStudent)
 	students.POST("", studentHandler.CreatStudent)

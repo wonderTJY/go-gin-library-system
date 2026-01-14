@@ -11,7 +11,8 @@ type AppError struct {
 	Code       string
 	Message    string
 }
-//实现error接口，让AppError成为error
+
+// 实现error接口，让AppError成为error
 func (e *AppError) Error() string {
 	return e.Message
 }
@@ -25,20 +26,23 @@ func NewAppError(statuscode int, code string, msg string) *AppError {
 }
 
 func handleError(c *gin.Context, err error) {
-	if appErr, ok := err.(*AppError); ok {
-		c.JSON(appErr.StatusCode, gin.H{
-			"code":       appErr.Code,
-			"message":    appErr.Message,
+	if !c.Writer.Written() {
+		if appErr, ok := err.(*AppError); ok {
+			c.JSON(appErr.StatusCode, gin.H{
+				"code":       appErr.Code,
+				"message":    appErr.Message,
+				"request_id": c.GetString("request_id"),
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":       "INTERNAL_ERROR",
+			"message":    "internal server error",
 			"request_id": c.GetString("request_id"),
 		})
-		return
 	}
 
-	c.JSON(http.StatusInternalServerError, gin.H{
-		"code":       "INTERNAL_ERROR",
-		"message":    "internal server error",
-		"request_id": c.GetString("request_id"),
-	})
 }
 
 func ErrorHandlingMiddleware() gin.HandlerFunc {
