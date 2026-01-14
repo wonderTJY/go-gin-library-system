@@ -14,11 +14,13 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	studentHandler := handlers.NewStudentHandler(db)
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.RequestCountMiddleware())
-	r.Use(middleware.AuthenticationMiddleware())
+	r.Use(middleware.AuthenticationMiddleware(db))
 	r.Use(middleware.LoggingMiddleware())
+	r.Use(middleware.ErrorHandlingMiddleware())
 
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
+	//auth := r.Group("/auth").Use(middleware.AuthenticationMiddleware(db))
 
 	books := v1.Group("/books")
 	books.GET("", bookHandler.ListBooks)

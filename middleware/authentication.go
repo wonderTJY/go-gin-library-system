@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 var tokenUserMap = map[string]uint{
@@ -11,7 +12,7 @@ var tokenUserMap = map[string]uint{
 	"asdf": 2,
 }
 
-func AuthenticationMiddleware() gin.HandlerFunc {
+func AuthenticationMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {

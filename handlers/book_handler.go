@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"trae-go/middleware"
 	"trae-go/models"
 )
 
@@ -23,7 +24,7 @@ func NewBookHandler(db *gorm.DB) *BookHandler {
 func (h *BookHandler) ListBooks(c *gin.Context) {
 	var books []models.Book
 	if err := h.DB.Find(&books).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list books"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_LIST_BOOKS", "failed to list books"))
 		return
 	}
 	c.JSON(http.StatusOK, books)
@@ -33,16 +34,16 @@ func (h *BookHandler) GetBook(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_ID", "invalid id"))
 		return
 	}
 	var book models.Book
 	if err := h.DB.First(&book, uint(id)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "BOOK_NOT_FOUND", "book not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get book"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_GET_BOOK", "failed to get book"))
 		return
 	}
 	c.JSON(http.StatusOK, book)
@@ -51,7 +52,7 @@ func (h *BookHandler) GetBook(c *gin.Context) {
 func (h *BookHandler) CreateBook(c *gin.Context) {
 	var input models.Book
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_JSON", "invalid json"))
 		return
 	}
 	book := models.Book{
@@ -59,7 +60,7 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 		Author: input.Author,
 	}
 	if err := h.DB.Create(&book).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create book"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_CREATE_BOOK", "failed to create book"))
 		return
 	}
 	c.JSON(http.StatusCreated, book)
@@ -69,28 +70,28 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_ID", "invalid id"))
 		return
 	}
 	var book models.Book
 	if err := h.DB.First(&book, uint(id)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "BOOK_NOT_FOUND", "book not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get book"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_GET_BOOK", "failed to get book"))
 		return
 	}
 	var input models.Book
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_JSON", "invalid json"))
 		return
 	}
 	book.Title = input.Title
 	book.Author = input.Author
 	book.Stock = input.Stock
 	if err := h.DB.Save(&book).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update book"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_UPDATE_BOOK", "failed to update book"))
 		return
 	}
 	c.JSON(http.StatusOK, book)
@@ -100,11 +101,11 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_ID", "invalid id"))
 		return
 	}
 	if err := h.DB.Delete(&models.Book{}, uint(id)).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete book"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_DELETE_BOOK", "failed to delete book"))
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -116,12 +117,12 @@ func (h *BookHandler) BookABook(c *gin.Context) {
 
 	stuid, err := strconv.ParseUint(stuidstr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid student_id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_STUDENT_ID", "invalid student_id"))
 		return
 	}
 	bookid, err := strconv.ParseUint(bookidstr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid book_id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_BOOK_ID", "invalid book_id"))
 		return
 	}
 
@@ -130,22 +131,22 @@ func (h *BookHandler) BookABook(c *gin.Context) {
 
 	if err := h.DB.First(&student, uint(stuid)).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "student not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "STUDENT_NOT_FOUND", "student not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	if err := h.DB.First(&book, uint(bookid)).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "BOOK_NOT_FOUND", "book not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	if book.Stock <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "book out of stock"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "BOOK_OUT_OF_STOCK", "book out of stock"))
 		return
 	}
 	var book_student models.Book_Student
@@ -154,12 +155,12 @@ func (h *BookHandler) BookABook(c *gin.Context) {
 	book_student.BorrowedAt = time.Now()
 	book_student.Status = models.BorrowStatusBorrowed
 	if err := h.DB.Create(&book_student).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	book.Stock -= 1
 	if err := h.DB.Save(&book).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	c.JSON(http.StatusOK, book_student)
@@ -185,12 +186,12 @@ func (h *BookHandler) ReturnABook(c *gin.Context) {
 
 	stuid, err := strconv.ParseUint(stuidstr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid student_id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_STUDENT_ID", "invalid student_id"))
 		return
 	}
 	bookid, err := strconv.ParseUint(bookidstr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid book_id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_BOOK_ID", "invalid book_id"))
 		return
 	}
 
@@ -199,30 +200,30 @@ func (h *BookHandler) ReturnABook(c *gin.Context) {
 		Where("student_id = ? AND book_id = ? AND status = ?", stuid, bookid, models.BorrowStatusBorrowed).
 		First(&book_student).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "borrow record not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "BORROW_RECORD_NOT_FOUND", "borrow record not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	book_student.Status = models.BorrowStatusReturned
 	book_student.ReturnedAt = time.Now()
 	if err := h.DB.Save(&book_student).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	var book models.Book
 	if err := h.DB.First(&book, uint(bookid)).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "BOOK_NOT_FOUND", "book not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	book.Stock += 1
 	if err := h.DB.Save(&book).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	c.JSON(http.StatusOK, book_student)
@@ -232,16 +233,16 @@ func (h *BookHandler) ListStudentBooks(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_ID", "invalid id"))
 		return
 	}
 	var student models.Student
 	if err := h.DB.Preload("Book_Student").First(&student, uint(id)).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "student not found"})
+			c.Error(middleware.NewAppError(http.StatusNotFound, "STUDENT_NOT_FOUND", "student not found"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.Error(middleware.NewAppError(http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error"))
 		return
 	}
 	c.JSON(http.StatusOK, student)
