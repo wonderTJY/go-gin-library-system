@@ -17,6 +17,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	r.Use(middleware.RequestCountMiddleware())
 
 	r.Use(middleware.LoggingMiddleware())
+	r.Use(middleware.RateLimiterMiddleware())
 	r.Use(middleware.ErrorHandlingMiddleware())
 	r.Use(middleware.AuthenticationMiddleware(db))
 

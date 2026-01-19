@@ -33,11 +33,9 @@ func LoggingMiddleware() gin.HandlerFunc {
 			rc = 0
 			log.Print("request_count haven't been set")
 		}
-
 		userID, ok := c.Get("user_id")
 		if !ok {
 			userID = 0
-			log.Printf("[%s] [rid:%s] less of user_id", startAtstr, c.Writer.Header().Get(RequestIDHeader))
 		}
 
 		log.Printf("[%s] [rid:%s] method=%s path=%s status=%d latency=%dms ip=%s ua=%q rc=%d userID=%d",
