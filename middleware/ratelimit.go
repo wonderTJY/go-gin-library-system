@@ -16,10 +16,38 @@ type limiter struct {
 	mu          sync.Mutex
 }
 
-var limter = &limiter{
+var (
+	ipLimiters = make(map[string]*limiter)
+	ipMu       sync.RWMutex
+)
+var globleLimter = &limiter{
 	windowStart: time.Now(),
-	limit:       3,
+	limit:       15,
 	window:      time.Minute,
+}
+
+func getLimiterForIP(ip string) *limiter {
+	ipMu.RLock()
+	l, ok := ipLimiters[ip]
+	ipMu.RUnlock()
+	if ok {
+		return l
+	}
+
+	ipMu.Lock()
+	defer ipMu.Unlock()
+
+	if l, ok = ipLimiters[ip]; ok {
+		return l
+	}
+	l = &limiter{
+		windowStart: time.Now(),
+		limit:       3,
+		window:      time.Minute,
+	}
+	ipLimiters[ip] = l
+	return l
+
 }
 
 func (l *limiter) Allow() bool {
@@ -39,8 +67,10 @@ func (l *limiter) Allow() bool {
 
 func RateLimiterMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		limiter := getLimiterForIP(ip)
 
-		if !limter.Allow() {
+		if !globleLimter.Allow() || !limiter.Allow() {
 			err := NewAppError(http.StatusTooManyRequests, "TOO_MANY_REQUEST", "too many request")
 			handleError(c, err)
 			c.Abort()
