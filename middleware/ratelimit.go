@@ -17,7 +17,7 @@ type limiter struct {
 }
 
 var (
-	ipLimiters = make(map[string]*limiter)
+	ipLimiters = make(map[string]*limiter) //map来制作局部限流器
 	ipMu       sync.RWMutex
 )
 var globleLimter = &limiter{

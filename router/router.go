@@ -18,6 +18,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.RateLimiterMiddleware())
+	r.Use(middleware.CorsMiddleware([]string{
+		"http://localhost:3000",
+		"http://127.0.0.1:3000",
+	}))
 	r.Use(middleware.ErrorHandlingMiddleware())
 	r.Use(middleware.AuthenticationMiddleware(db))
 
