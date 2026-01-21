@@ -10,7 +10,7 @@ func CorsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	origins := make(map[string]struct{}, len(allowedOrigins))
 	for _, o := range allowedOrigins {
 		origins[o] = struct{}{}
-	}
+	} //range取出，赋value给o，再把o填进map
 
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")

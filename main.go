@@ -12,14 +12,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
+	rdb, err := config.InitRedis()
+	if err != nil {
+		log.Fatalf("failed to connect redis: %v", err)
+	}
+	defer rdb.Close()
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("failed to get sql db: %v", err)
 	}
 	defer sqlDB.Close()
-	r := router.SetupRouter(db)
+
+	r := router.SetupRouter(db, rdb)
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("failed to run server: %v", err)
 	}
 }
-

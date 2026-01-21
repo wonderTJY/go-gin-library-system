@@ -2,13 +2,14 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"trae-go/handlers"
 	"trae-go/middleware"
 )
 
-func SetupRouter(db *gorm.DB) *gin.Engine {
+func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	r := gin.New()
 	bookHandler := handlers.NewBookHandler(db)
 	studentHandler := handlers.NewStudentHandler(db)
@@ -17,7 +18,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	r.Use(middleware.RequestCountMiddleware())
 
 	r.Use(middleware.LoggingMiddleware())
-	r.Use(middleware.RateLimiterMiddleware())
+	r.Use(middleware.RedisRateLimiterMiddleware(rdb))
 	r.Use(middleware.CorsMiddleware([]string{
 		"http://localhost:3000",
 		"http://127.0.0.1:3000",

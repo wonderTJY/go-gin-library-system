@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type limiter struct {
@@ -78,5 +80,49 @@ func RateLimiterMiddleware() gin.HandlerFunc {
 		}
 		c.Next()
 
+	}
+}
+
+func RedisRateLimiterMiddleware(rdb *redis.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		ip := c.ClientIP()
+
+		globalKey := "rate:global"
+		ipKey := fmt.Sprintf("rate:ip:%s", ip)
+
+		globalLimit := int64(15)
+		ipLimit := int64(3)
+		window := time.Minute
+
+		globalCount, err := rdb.Incr(ctx, globalKey).Result()
+		if err != nil {
+			appErr := NewAppError(http.StatusInternalServerError, "RATE_LIMIT_STORAGE_ERROR", "rate limit storage error")
+			handleError(c, appErr)
+			c.Abort()
+			return
+		}
+		if globalCount == 1 {
+			rdb.Expire(ctx, globalKey, window)
+		}
+		ipCount, err := rdb.Incr(ctx, ipKey).Result()
+		if err != nil {
+			appErr := NewAppError(http.StatusInternalServerError, "RATE_LIMIT_STORAGE_ERROR", "rate limit storage error")
+			handleError(c, appErr)
+			c.Abort()
+			return
+		}
+		if ipCount == 1 {
+			rdb.Expire(ctx, ipKey, window)
+		}
+
+		if globalCount > globalLimit || ipCount > ipLimit {
+			appErr := NewAppError(http.StatusTooManyRequests, "TOO_MANY_REQUEST", "too many request")
+			handleError(c, appErr)
+			c.Abort()
+			return
+		}
+
+		c.Next()
 	}
 }
