@@ -1,0 +1,24 @@
+server:
+  port: "8080"
+  mode: "debug" # gin 运行模式: debug, release, test
+
+database:
+  driver: "sqlite"
+  dsn: "data.db"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+auth:
+  token_expire_hours: 24
+
+cors:
+  allow_origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+
+ratelimit:
+  global_limit: 15
+  ip_limit: 3

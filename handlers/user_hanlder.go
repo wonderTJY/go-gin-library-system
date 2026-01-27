@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"trae-go/config"
 	"trae-go/middleware"
 	"trae-go/models"
 
@@ -128,7 +129,7 @@ func (h *UserHandler) UserLogin(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	key := "auth:token:" + token
-	if err := h.RDB.Set(ctx, key, strconv.Itoa(user.ID), 24*time.Hour).Err(); err != nil {
+	if err := h.RDB.Set(ctx, key, strconv.Itoa(user.ID), time.Duration(config.AppConfig.Auth.TokenExpireHours)).Err(); err != nil {
 		c.Error(middleware.NewAppError(http.StatusInternalServerError, "TOKEN_STORE_FAILED", "token store failed"))
 		return
 	}

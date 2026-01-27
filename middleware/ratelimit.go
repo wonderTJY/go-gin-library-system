@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"trae-go/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -24,7 +25,7 @@ var (
 )
 var globleLimter = &limiter{
 	windowStart: time.Now(),
-	limit:       15,
+	limit:       int(config.AppConfig.RateLimit.GlobalLimit),
 	window:      time.Minute,
 }
 
@@ -44,7 +45,7 @@ func getLimiterForIP(ip string) *limiter {
 	}
 	l = &limiter{
 		windowStart: time.Now(),
-		limit:       3,
+		limit:       int(config.AppConfig.RateLimit.IPLimit),
 		window:      time.Minute,
 	}
 	ipLimiters[ip] = l
@@ -91,8 +92,8 @@ func RedisRateLimiterMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		globalKey := "rate:global"
 		ipKey := fmt.Sprintf("rate:ip:%s", ip)
 
-		globalLimit := int64(15)
-		ipLimit := int64(3)
+		globalLimit := int64(config.AppConfig.RateLimit.GlobalLimit)
+		ipLimit := int64(config.AppConfig.RateLimit.IPLimit)
 		window := time.Minute
 
 		globalCount, err := rdb.Incr(ctx, globalKey).Result()

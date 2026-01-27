@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	config.InitConfig()
+
 	db, err := config.InitDatabase()
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
@@ -24,7 +26,7 @@ func main() {
 	defer sqlDB.Close()
 
 	r := router.SetupRouter(db, rdb)
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":" + config.AppConfig.Server.Port); err != nil {
 		log.Fatalf("failed to run server: %v", err)
 	}
 }

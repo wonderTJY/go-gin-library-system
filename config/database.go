@@ -12,7 +12,7 @@ import (
 )
 
 func InitDatabase() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(AppConfig.Database.DSN), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,9 @@ func InitDatabase() (*gorm.DB, error) {
 
 func InitRedis() (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr:     AppConfig.Redis.Addr,
+		Password: AppConfig.Redis.Password,
+		DB:       AppConfig.Redis.DB,
 	})
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()

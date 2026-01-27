@@ -5,6 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
+	"trae-go/config"
 	"trae-go/handlers"
 	"trae-go/middleware"
 )
@@ -22,10 +23,7 @@ func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	r.Use(middleware.RequestCountMiddleware())
 	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.RedisRateLimiterMiddleware(rdb))
-	r.Use(middleware.CorsMiddleware([]string{
-		"http://localhost:3000",
-		"http://127.0.0.1:3000",
-	}))
+	r.Use(middleware.CorsMiddleware(config.AppConfig.Cors.AllowOrigins))
 	r.Use(middleware.ErrorHandlingMiddleware())
 
 	api := r.Group("/api")
