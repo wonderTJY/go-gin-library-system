@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -129,7 +130,12 @@ func (h *UserHandler) UserLogin(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	key := "auth:token:" + token
-	if err := h.RDB.Set(ctx, key, strconv.Itoa(user.ID), time.Duration(config.AppConfig.Auth.TokenExpireHours)).Err(); err != nil {
+	d, err := time.ParseDuration(config.AppConfig.Auth.TokenExpireHours)
+	if err != nil {
+		log.Printf("TokenExpireHours parse failed,use default setting")
+		d = 24 * time.Hour
+	}
+	if err := h.RDB.Set(ctx, key, strconv.Itoa(user.ID), d).Err(); err != nil {
 		c.Error(middleware.NewAppError(http.StatusInternalServerError, "TOKEN_STORE_FAILED", "token store failed"))
 		return
 	}

@@ -21,8 +21,19 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Driver string `mapstructure:"driver"`
-	DSN    string `mapstructure:"dsn"`
+	Driver   string `mapstructure:"driver"`
+	Host     string `mapstructure:"host"`
+	Port     string `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DBName   string `mapstructure:"dbname"`
+	SSLMode  string `mapstructure:"sslmode"`
+	TimeZone string `mapstructure:"timezone"`
+	DSN      string `mapstructure:"dsn"` // 兼容 SQLite 或直接提供 DSN 的情况
+
+	MaxIdleConns    int64  `mapstructure:"MaxIdleConns"`
+	MaxOpenConns    int64  `mapstructure:"MaxOpenConns"`
+	ConnMaxLifetime string `mapstructure:"ConnMaxLifetime"`
 }
 
 type RedisConfig struct {
@@ -32,7 +43,7 @@ type RedisConfig struct {
 }
 
 type AuthConfig struct {
-	TokenExpireHours int `mapstructure:"token_expire_hours"`
+	TokenExpireHours string `mapstructure:"token_expire_hours"`
 }
 
 type CorsConfig struct {
