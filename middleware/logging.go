@@ -1,16 +1,16 @@
 package middleware
 
 import (
-	"log"
 	"time"
+	"trae-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func LoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startAt := time.Now()
-		startAtstr := startAt.Format("2006-01-02 15:04:05")
 		method := c.Request.Method
 		path := c.Request.URL.Path
 		clientIP := c.ClientIP()
@@ -27,19 +27,28 @@ func LoggingMiddleware() gin.HandlerFunc {
 				rc = rcTemp2
 			} else {
 				rc = 0
-				log.Print("request_count type assert to int64 failed")
+				logger.L.Warn("request_count type assert to int64 failed")
 			}
 		} else {
 			rc = 0
-			log.Print("request_count haven't been set")
+			logger.L.Debug("request_count haven't been set")
 		}
 		userID, ok := c.Get("user_id")
 		if !ok {
 			userID = 0
 		}
 
-		log.Printf("[%s] [rid:%s] method=%s path=%s status=%d latency=%dms ip=%s ua=%q rc=%d userID=%d",
-			startAtstr, c.Writer.Header().Get(RequestIDHeader), method, path, statusCode, latency.Milliseconds(), clientIP, userAgent, rc, userID)
+		logger.L.Info("HTTP Request",
+			zap.String("rid", c.Writer.Header().Get(RequestIDHeader)),
+			zap.String("method", method),
+			zap.String("path", path),
+			zap.Int("status", statusCode),
+			zap.Duration("latency", latency),
+			zap.String("ip", clientIP),
+			zap.String("ua", userAgent),
+			zap.Int64("rc", rc),
+			zap.Any("userID", userID),
+		)
 
 	}
 }

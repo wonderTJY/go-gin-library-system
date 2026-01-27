@@ -13,6 +13,7 @@ type Config struct {
 	Auth      AuthConfig      `mapstructure:"auth"`
 	Cors      CorsConfig      `mapstructure:"cors"`
 	RateLimit RateLimitConfig `mapstructure:"ratelimit"`
+	Log       LogConfig       `mapstructure:"log"`
 }
 
 type ServerConfig struct {
@@ -53,6 +54,13 @@ type CorsConfig struct {
 type RateLimitConfig struct {
 	GlobalLimit int64 `mapstructure:"global_limit"`
 	IPLimit     int64 `mapstructure:"ip_limit"`
+}
+type LogConfig struct {
+	Level      string `mapstructure:"level"`
+	Filename   string `mapstructure:"filename"`
+	MaxSize    int    `mapstructure:"max_size"`
+	MaxAge     int    `mapstructure:"max_age"`
+	MaxBackups int    `mapstructure:"max_backups"`
 }
 
 var AppConfig Config

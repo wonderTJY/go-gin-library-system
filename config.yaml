@@ -34,3 +34,11 @@ cors:
 ratelimit:
   global_limit: 1000
   ip_limit: 100
+
+
+log:
+  level: "debug"
+  filename: "logs/app.log"
+  max_size: 10
+  max_age: 30
+  max_backups: 5  

@@ -22,11 +22,14 @@ import (
 	"log"
 
 	"trae-go/config"
+	"trae-go/pkg/logger"
 	"trae-go/router"
 )
 
 func main() {
 	config.InitConfig()
+	logger.InitLogger(config.AppConfig.Log, config.AppConfig.Server.Mode)
+	defer logger.L.Sync() // 退出前刷新缓冲
 
 	db, err := config.InitDatabase()
 	if err != nil {

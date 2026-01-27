@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"trae-go/pkg/logger"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type AppError struct {
@@ -26,23 +28,40 @@ func NewAppError(statuscode int, code string, msg string) *AppError {
 }
 
 func handleError(c *gin.Context, err error) {
-	if !c.Writer.Written() {
-		if appErr, ok := err.(*AppError); ok {
+	rid := c.GetString("request_id")
+
+	if appErr, ok := err.(*AppError); ok {
+		// 日志照常记录
+		logger.L.Warn("Business Error",
+			zap.String("rid", rid),
+			zap.String("code", appErr.Code),
+			zap.String("msg", appErr.Message))
+
+		// 响应只在没写过的时候写
+		if !c.Writer.Written() {
 			c.JSON(appErr.StatusCode, gin.H{
 				"code":       appErr.Code,
 				"message":    appErr.Message,
-				"request_id": c.GetString("request_id"),
+				"request_id": rid,
 			})
-			return
 		}
+		return
+	}
 
+	// 日志照常记录
+	logger.L.Error("Internal Server Error",
+		zap.String("rid", rid),
+		zap.Error(err),
+	)
+
+	// 响应只在没写过的时候写
+	if !c.Writer.Written() {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":       "INTERNAL_ERROR",
 			"message":    "internal server error",
-			"request_id": c.GetString("request_id"),
+			"request_id": rid,
 		})
 	}
-
 }
 
 func ErrorHandlingMiddleware() gin.HandlerFunc {

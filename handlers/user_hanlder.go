@@ -111,7 +111,6 @@ func (h *UserHandler) UserRegister(c *gin.Context) {
 		c.Error(middleware.NewAppError(http.StatusInternalServerError, "FAILED_CREATE_USER", "failed to create user"))
 		return
 	}
-
 	c.JSON(http.StatusCreated, user)
 }
 
