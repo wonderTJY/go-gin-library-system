@@ -2,17 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-var tokenUserMap = map[string]uint{
-	"qwer": 1,
-	"asdf": 2,
-}
-
-func AuthenticationMiddleware(db *gorm.DB) gin.HandlerFunc {
+func AuthenticationMiddleware(db *gorm.DB, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
@@ -20,13 +17,29 @@ func AuthenticationMiddleware(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userID, ok := tokenUserMap[token]
-		if !ok {
+
+		ctx := c.Request.Context()
+		key := "auth:token:" + token
+		userIDStr, err := rdb.Get(ctx, key).Result()
+		if err == redis.Nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			c.Abort()
 			return
 		}
-		c.Set("user_id", userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+			c.Abort()
+			return
+		}
+
+		id, err := strconv.ParseUint(userIDStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", uint(id))
 		c.Next()
 	}
 }

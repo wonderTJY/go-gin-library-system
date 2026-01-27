@@ -13,10 +13,13 @@ func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	r := gin.New()
 	bookHandler := handlers.NewBookHandler(db)
 	studentHandler := handlers.NewStudentHandler(db)
+	userHanlder := handlers.NewUserHanlder(db, rdb)
+
+	r.Static("/static/avatars", "./static/avatars")
+
 	r.Use(middleware.RecoveryMiddleware())
 	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.RequestCountMiddleware())
-
 	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.RedisRateLimiterMiddleware(rdb))
 	r.Use(middleware.CorsMiddleware([]string{
@@ -24,20 +27,32 @@ func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 		"http://127.0.0.1:3000",
 	}))
 	r.Use(middleware.ErrorHandlingMiddleware())
-	r.Use(middleware.AuthenticationMiddleware(db))
 
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
-	//auth := r.Group("/auth").Use(middleware.AuthenticationMiddleware(db))
 
-	books := v1.Group("/books")
+	// 不需要登录的接口（公开接口）
+	publicUser := v1.Group("/user")
+	publicUser.POST("/register", userHanlder.UserRegister)
+	publicUser.POST("/login", userHanlder.UserLogin)
+	publicUser.POST("/uploadAvatar", userHanlder.UploadAvatar)
+
+	// 需要登录的接口
+	authRequired := v1.Group("")
+	authRequired.Use(middleware.AuthenticationMiddleware(db, rdb))
+
+	authUser := authRequired.Group("/user")
+	authUser.PUT("/profile", userHanlder.UpdateUser)
+	authUser.DELETE("/:user_name", userHanlder.UserDelte)
+
+	books := authRequired.Group("/books")
 	books.GET("", bookHandler.ListBooks)
 	books.GET("/:id", bookHandler.GetBook)
 	books.POST("", bookHandler.CreateBook)
 	books.PUT("/:id", bookHandler.UpdateBook)
 	books.DELETE("/:id", bookHandler.DeleteBook)
 
-	students := v1.Group("/students")
+	students := authRequired.Group("/students")
 	students.GET("/panic", studentHandler.PanicTest)
 	students.GET("", studentHandler.ListStudents)
 	students.GET("/:id", studentHandler.GetStudent)
