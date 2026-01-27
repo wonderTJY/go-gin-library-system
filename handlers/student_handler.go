@@ -20,6 +20,16 @@ func NewStudentHandler(db *gorm.DB) *StudentHandler {
 	return &StudentHandler{DB: db}
 }
 
+// ListStudents 获取学生列表
+// @Summary      获取学生列表
+// @Description  获取所有学生信息
+// @Tags         students
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   models.Student
+// @Failure      500  {object}  middleware.AppError
+// @Router       /students [get]
 func (h *StudentHandler) ListStudents(c *gin.Context) {
 	var students []models.Student
 	if err := h.DB.Find(&students).Error; err != nil {
@@ -28,6 +38,19 @@ func (h *StudentHandler) ListStudents(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, students)
 }
+
+// GetStudent 获取单个学生
+// @Summary      获取单个学生
+// @Description  根据 ID 获取学生详情
+// @Tags         students
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "学生 ID"
+// @Success      200  {object}  models.Student
+// @Failure      400  {object}  middleware.AppError "ID 无效"
+// @Failure      404  {object}  middleware.AppError "学生未找到"
+// @Router       /students/{id} [get]
 func (h *StudentHandler) GetStudent(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -46,6 +69,18 @@ func (h *StudentHandler) GetStudent(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, student)
 }
+
+// CreatStudent 创建学生
+// @Summary      创建学生
+// @Description  创建一个新学生
+// @Tags         students
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body models.Student true "学生信息"
+// @Success      201  {object}  models.Student
+// @Failure      400  {object}  middleware.AppError
+// @Router       /students [post]
 func (h *StudentHandler) CreatStudent(c *gin.Context) {
 	var input models.Student
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -62,6 +97,20 @@ func (h *StudentHandler) CreatStudent(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, student)
 }
+
+// UpdateStudent 更新学生
+// @Summary      更新学生
+// @Description  根据 ID 更新学生信息
+// @Tags         students
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id      path      int             true  "学生 ID"
+// @Param        request body      models.Student  true  "更新信息"
+// @Success      200     {object}  models.Student
+// @Failure      400     {object}  middleware.AppError
+// @Failure      404     {object}  middleware.AppError
+// @Router       /students/{id} [put]
 func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -91,6 +140,19 @@ func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, student)
 }
+
+// DeleteStudent 删除学生
+// @Summary      删除学生
+// @Description  根据 ID 删除学生
+// @Tags         students
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      int  true  "学生 ID"
+// @Success      200  {object}  map[string]string "{"msg": "student deleted"}"
+// @Failure      400  {object}  middleware.AppError
+// @Failure      404  {object}  middleware.AppError
+// @Router       /students/{id} [delete]
 func (h *StudentHandler) DeleteStudent(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)

@@ -8,6 +8,11 @@ import (
 	"trae-go/config"
 	"trae-go/handlers"
 	"trae-go/middleware"
+
+	_ "trae-go/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
@@ -16,6 +21,7 @@ func SetupRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	studentHandler := handlers.NewStudentHandler(db)
 	userHanlder := handlers.NewUserHanlder(db, rdb)
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Static("/static/avatars", "./static/avatars")
 
 	r.Use(middleware.RecoveryMiddleware())

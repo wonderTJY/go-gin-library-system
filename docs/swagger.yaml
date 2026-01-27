@@ -1,0 +1,701 @@
+basePath: /api/v1
+definitions:
+  handlers.UserLoginRequest:
+    properties:
+      password:
+        type: string
+      user_name:
+        type: string
+    required:
+    - password
+    - user_name
+    type: object
+  handlers.UserRegisterRequest:
+    properties:
+      avatar_url:
+        type: string
+      born_date:
+        type: string
+      ide:
+        type: string
+      password:
+        type: string
+      sex:
+        type: string
+      user_name:
+        type: string
+    required:
+    - password
+    - user_name
+    type: object
+  handlers.UserUpdateRequest:
+    properties:
+      avatar_url:
+        type: string
+      born_date:
+        type: string
+      sex:
+        type: string
+      user_name:
+        type: string
+    type: object
+  middleware.AppError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+  models.Book:
+    properties:
+      author:
+        type: string
+      book_students:
+        items:
+          $ref: '#/definitions/models.Book_Student'
+        type: array
+      copies:
+        items:
+          $ref: '#/definitions/models.BookCopy'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      stock:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Book_Student:
+    properties:
+      book_id:
+        type: integer
+      borrowed_time:
+        type: string
+      id:
+        type: integer
+      return_time:
+        type: string
+      status:
+        $ref: '#/definitions/models.BorrowStatus'
+      student_id:
+        type: integer
+    type: object
+  models.BookCopy:
+    properties:
+      book_id:
+        type: integer
+      id:
+        type: integer
+      status:
+        $ref: '#/definitions/models.BookStatus'
+    type: object
+  models.BookStatus:
+    enum:
+    - available
+    - borrowed
+    - lost
+    type: string
+    x-enum-comments:
+      BookStatusAvailable: 在馆
+      BookStatusBorrowed: 已借出
+      BookStatusLost: 遗失
+    x-enum-descriptions:
+    - 在馆
+    - 已借出
+    - 遗失
+    x-enum-varnames:
+    - BookStatusAvailable
+    - BookStatusBorrowed
+    - BookStatusLost
+  models.BorrowStatus:
+    enum:
+    - borrowed
+    - returned
+    - lost
+    type: string
+    x-enum-varnames:
+    - BorrowStatusBorrowed
+    - BorrowStatusReturned
+    - BorrowStatusLost
+  models.Student:
+    properties:
+      book_student:
+        items:
+          $ref: '#/definitions/models.Book_Student'
+        type: array
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.User:
+    properties:
+      avatar_url:
+        type: string
+      born_date:
+        type: string
+      id:
+        type: integer
+      ide:
+        type: string
+      password:
+        type: string
+      sex:
+        type: string
+      user_name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: 这是一个 Go 项目的 API 文档。
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Trae Go API
+  version: "1.0"
+paths:
+  /books:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有书籍信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 获取书籍列表
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: 添加一本新书
+      parameters:
+      - description: 书籍信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 创建书籍
+      tags:
+      - books
+  /books/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据 ID 删除书籍
+      parameters:
+      - description: 书籍 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 删除书籍
+      tags:
+      - books
+    get:
+      consumes:
+      - application/json
+      description: 根据 ID 获取书籍详情
+      parameters:
+      - description: 书籍 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 获取单本书籍
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: 根据 ID 更新书籍信息
+      parameters:
+      - description: 书籍 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 更新书籍
+      tags:
+      - books
+  /students:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有学生信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Student'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 获取学生列表
+      tags:
+      - students
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新学生
+      parameters:
+      - description: 学生信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 创建学生
+      tags:
+      - students
+  /students/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据 ID 删除学生
+      parameters:
+      - description: 学生 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"msg": "student deleted"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 删除学生
+      tags:
+      - students
+    get:
+      consumes:
+      - application/json
+      description: 根据 ID 获取学生详情
+      parameters:
+      - description: 学生 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Student'
+        "400":
+          description: ID 无效
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: 学生未找到
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 获取单个学生
+      tags:
+      - students
+    put:
+      consumes:
+      - application/json
+      description: 根据 ID 更新学生信息
+      parameters:
+      - description: 学生 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 更新学生
+      tags:
+      - students
+  /students/{id}/books:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定学生的所有借阅记录（包含书籍信息）
+      parameters:
+      - description: 学生 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 获取学生借书记录
+      tags:
+      - borrow
+  /students/{student_id}/books/{book_id}/return:
+    post:
+      consumes:
+      - application/json
+      description: 学生归还书籍
+      parameters:
+      - description: 学生 ID
+        in: path
+        name: student_id
+        required: true
+        type: integer
+      - description: 书籍 ID
+        in: path
+        name: book_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book_Student'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 归还书籍
+      tags:
+      - borrow
+  /user/{user_name}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据用户名删除用户
+      parameters:
+      - description: 用户名
+        in: path
+        name: user_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: 用户未找到
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "500":
+          description: 删除失败
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 删除用户
+      tags:
+      - user
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: 使用用户名和密码登录，获取 Token
+      parameters:
+      - description: 登录请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"token": "xxx", "user": {...}}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      summary: 用户登录
+      tags:
+      - user
+  /user/profile:
+    put:
+      consumes:
+      - application/json
+      description: 更新当前登录用户的个人信息（需要认证）
+      parameters:
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: 无效的 JSON
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "404":
+          description: 用户未找到
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      security:
+      - BearerAuth: []
+      summary: 更新个人资料
+      tags:
+      - user
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: 创建新用户账号
+      parameters:
+      - description: 注册信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: 无效的 JSON 或用户已存在
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      summary: 用户注册
+      tags:
+      - user
+  /user/uploadAvatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传用户头像文件，返回头像 URL
+      parameters:
+      - description: 头像文件
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"avatar_url": "http://..."}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 文件获取失败
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+        "500":
+          description: 保存文件失败
+          schema:
+            $ref: '#/definitions/middleware.AppError'
+      summary: 上传头像
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

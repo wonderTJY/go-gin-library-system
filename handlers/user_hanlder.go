@@ -55,6 +55,17 @@ func generateToken(n int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
+// UserRegister 用户注册
+// @Summary      用户注册
+// @Description  创建新用户账号
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        request body UserRegisterRequest true "注册信息"
+// @Success      201  {object}  models.User
+// @Failure      400  {object}  middleware.AppError "无效的 JSON 或用户已存在"
+// @Failure      500  {object}  middleware.AppError "服务器内部错误"
+// @Router       /user/register [post]
 func (h *UserHandler) UserRegister(c *gin.Context) {
 	var req UserRegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -104,6 +115,17 @@ func (h *UserHandler) UserRegister(c *gin.Context) {
 	c.JSON(http.StatusCreated, user)
 }
 
+// UserLogin 用户登录
+// @Summary      用户登录
+// @Description  使用用户名和密码登录，获取 Token
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        request body UserLoginRequest true "登录请求参数"
+// @Success      200  {object}  map[string]interface{} "{"token": "xxx", "user": {...}}"
+// @Failure      400  {object}  middleware.AppError
+// @Failure      401  {object}  middleware.AppError
+// @Router       /user/login [post]
 func (h *UserHandler) UserLogin(c *gin.Context) {
 	var req UserLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -146,6 +168,18 @@ func (h *UserHandler) UserLogin(c *gin.Context) {
 	})
 }
 
+// UserDelete 删除用户
+// @Summary      删除用户
+// @Description  根据用户名删除用户
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        user_name path string true "用户名"
+// @Success      204  "No Content"
+// @Failure      404  {object}  middleware.AppError "用户未找到"
+// @Failure      500  {object}  middleware.AppError "删除失败"
+// @Router       /user/{user_name} [delete]
 func (h *UserHandler) UserDelte(c *gin.Context) {
 	userName := c.Param("user_name")
 
@@ -162,6 +196,19 @@ func (h *UserHandler) UserDelte(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// UpdateUser 更新用户信息
+// @Summary      更新个人资料
+// @Description  更新当前登录用户的个人信息（需要认证）
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body UserUpdateRequest true "更新信息"
+// @Success      200  {object}  models.User
+// @Failure      400  {object}  middleware.AppError "无效的 JSON"
+// @Failure      401  {object}  middleware.AppError "未授权"
+// @Failure      404  {object}  middleware.AppError "用户未找到"
+// @Router       /user/profile [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var req UserUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -213,6 +260,17 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// UploadAvatar 上传头像
+// @Summary      上传头像
+// @Description  上传用户头像文件，返回头像 URL
+// @Tags         user
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        avatar formData file true "头像文件"
+// @Success      200  {object}  map[string]string "{"avatar_url": "http://..."}"
+// @Failure      400  {object}  middleware.AppError "文件获取失败"
+// @Failure      500  {object}  middleware.AppError "保存文件失败"
+// @Router       /user/uploadAvatar [post]
 func (h *UserHandler) UploadAvatar(c *gin.Context) {
 	path, err := SaveFile(c, "avatar", "static/avatars")
 	if err != nil {
