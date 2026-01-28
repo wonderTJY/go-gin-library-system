@@ -29,11 +29,11 @@ func NewUserHanlder(db *gorm.DB, rdb *redis.Client) UserHandler {
 }
 
 type UserRegisterRequest struct {
-	Name      string `json:"user_name" binding:"required"`
-	Password  string `json:"password" binding:"required"`
-	Sex       string `json:"sex"`
-	BornDate  string `json:"born_date"`
-	Identify  string `json:"ide"`
+	Name      string `json:"user_name" binding:"required" example:"zhangsan"`
+	Password  string `json:"password" binding:"required" example:"123456"`
+	Sex       string `json:"sex" example:"male"`
+	BornDate  string `json:"born_date" example:"2006-01-02"` // 添加 example 提示格式
+	Identify  string `json:"ide" example:"student"`
 	AvatarURL string `json:"avatar_url"`
 }
 type UserUpdateRequest struct {
@@ -84,12 +84,21 @@ func (h *UserHandler) UserRegister(c *gin.Context) {
 
 	var bornTime time.Time
 	if req.BornDate != "" {
-		t, err := time.Parse("2006-01-02", req.BornDate)
-		if err != nil {
-			c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_BORN_DATE", "invalid born_date"))
+		// 尝试多种常见的日期格式
+		layouts := []string{"2006-01-02", "2006/01/02", "2006.01.02"}
+		var parseErr error
+		for _, layout := range layouts {
+			bornTime, parseErr = time.Parse(layout, req.BornDate)
+			if parseErr == nil {
+				break
+			}
+		}
+
+		if parseErr != nil {
+			// 如果所有格式都尝试失败，才报错
+			c.Error(middleware.NewAppError(http.StatusBadRequest, "INVALID_BORN_DATE", "invalid born_date format, expected yyyy-mm-dd"))
 			return
 		}
-		bornTime = t
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)

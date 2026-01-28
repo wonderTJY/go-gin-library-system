@@ -870,19 +870,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "born_date": {
-                    "type": "string"
+                    "description": "添加 example 提示格式",
+                    "type": "string",
+                    "example": "2006-01-02"
                 },
                 "ide": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "student"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123456"
                 },
                 "sex": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "male"
                 },
                 "user_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "zhangsan"
                 }
             }
         },

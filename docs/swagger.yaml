@@ -15,14 +15,20 @@ definitions:
       avatar_url:
         type: string
       born_date:
+        description: 添加 example 提示格式
+        example: "2006-01-02"
         type: string
       ide:
+        example: student
         type: string
       password:
+        example: "123456"
         type: string
       sex:
+        example: male
         type: string
       user_name:
+        example: zhangsan
         type: string
     required:
     - password
